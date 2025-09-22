@@ -58,7 +58,7 @@ def search_index(img: Image.Image, k: int = 5):
 
 
 def generate_description(artist: str, title: str, period: str) -> str:
-    # Placeholder for LLM (Gemini API, LangChain, etc.)
+    # Placeholder for LLM
     return f"This is '{title}' by {artist}, created in the {period} period. More contextual details will be generated here."
 
 
