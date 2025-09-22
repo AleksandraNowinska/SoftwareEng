@@ -54,6 +54,49 @@ Our system combines:
 
 ---
 
+## How to Run
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/AleksandraNowinska/SoftwareEngSoftEng.git
+   cd SoftwareEngSoftEng
+   ```
+
+2. Create a virtual environment (optional but recommended):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # on macOS/Linux
+   venv\Scripts\activate      # on Windows
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Run the demo app:
+   ```bash
+   python app/app.py
+   ```
+   The app will launch at [http://localhost:7860](http://localhost:7860).
+
+---
+
+## Sample Dataset
+For quick testing, we provide a `sample_dataset.csv` and three sample images under `data/sample_images/`.  
+This allows running the demo pipeline without the curator dataset.  
+
+---
+
+## Placeholder LLM
+At this stage, the description generation in `app/app.py` is a simple placeholder function.  
+It returns a templated text based on metadata (artist, title, period).  
+
+Later, this function will be connected to the **Gemini API** through LangChain for generating contextual and accessible descriptions.  
+This is already noted in the code and in the project plan.
+
+---
+
 ## References
 - Wikipedia/Wikidata API for metadata.  
 - OpenArt, WikiArt, and museum open collections for images.  
