@@ -17,11 +17,15 @@ import time
 import csv
 import gradio as gr
 import faiss
-import torch
 import numpy as np
 import pandas as pd
 from PIL import Image
-from torchvision import transforms
+
+# Pre-load torch to avoid slow dynamic compilation during transformers import
+import torch
+torch.set_num_threads(1)  # Reduce overhead
+
+# Now import transformers (which triggers torchvision)
 from transformers import CLIPProcessor, CLIPModel
 
 # ============================================================================
