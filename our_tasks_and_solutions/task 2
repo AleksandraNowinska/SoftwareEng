@@ -43,19 +43,18 @@ data processing and preparation.
  
  
 Data 
-For our project, we work with a subset of existing open-source art datasets from Kaggle, 
-focusing only on information relevant to one selected exhibition. The datasets are partially 
-sampled and curated to fit the needs of our stakeholder (a curator). This means filtering the 
-data down to include only the artist name and a corresponding image of the artwork, which 
-represent the minimum requirements for building an AI system that can support an exhibition 
-setting. We used datasets such as Best Artworks of All Time, which contain thousands of 
-high-quality images. From these, we create a reduced dataset, suitable for one exhibition 
-scenario. The volume of the full datasets contains over 8,000 images, but for our task, we 
-curate a smaller sample (dozens to a few hundred images). The variety of the data includes 
-multiple modalities: tabular metadata (artist names, time periods, genres) and visual data 
-(artwork images). Regarding velocity, the data is static rather than streaming, making it 
-suitable for one-time curation and offline model training. And for veracity, no missing data or 
-corrupted files. 
+For our project, we work with artwork images sourced from Kaggle's art datasets (Best Artworks of All Time and WikiArt), focusing on data relevant to our stakeholder's needs - a museum curator. The dataset has been curated to include 5 renowned artists (Leonardo da Vinci, Claude Monet, Pablo Picasso, Rembrandt van Rijn, and Vincent van Gogh), with 10 high-quality images per artist, totaling 50 artworks in our vector database.
+
+**Volume:** 50 curated artwork images (expandable to thousands from full Kaggle datasets)  
+**Variety:** Multiple modalities - visual data (JPEG/PNG images) and metadata (artist names, periods, titles)  
+**Velocity:** Static dataset suitable for offline processing and one-time vector embedding generation  
+**Veracity:** High quality - all images manually verified, no missing data or corrupted files
+
+The data is organized in `data/artworks/<artist_name>/` directories and processed using our custom dataset preparation script (`scripts/prepare_dataset.py`) which generates:
+1. FAISS vector index (`models/faiss.index`) - 50 embeddings of 512 dimensions each
+2. Metadata file (`models/metadata.parquet`) - Parquet format for efficient querying
+
+This curated subset represents one exhibition scenario, enabling fast similarity search while maintaining high recognition accuracy. 
 Model (Pipeline) 
 Our project’s core idea is to leverage foundational models and RAG to tackle our problem. 
 We first remove all unnecessary data from the dataset like “number of images per artist”. We 

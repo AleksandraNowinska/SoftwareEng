@@ -33,8 +33,15 @@ echo "✓ Redis is running"
 
 # Setup orchestrator
 echo ""
-echo "Setting up orchestrator..."
+echo "Setting up orchestrator (initial setup)..."
 python distributed/orchestrator.py
+
+# Start Orchestrator Service in background
+echo ""
+echo "Starting Orchestrator Service..."
+python distributed/orchestrator_service.py &
+ORCHESTRATOR_PID=$!
+echo "✓ Orchestrator Service started (PID: $ORCHESTRATOR_PID)"
 
 # Start AI Server in background
 echo ""
@@ -43,23 +50,26 @@ python distributed/ai_server.py &
 AI_SERVER_PID=$!
 echo "✓ AI Server started (PID: $AI_SERVER_PID)"
 
-# Wait a moment for AI server to initialize
-sleep 2
+# Wait a moment for servers to initialize
+sleep 3
 
 # Start Interface Server
 echo ""
 echo "Starting Interface Server..."
 echo "========================================"
 echo "🌐 Web Interface: http://localhost:5000"
-echo "🤖 AI Server: Running in background"
-echo "📊 Orchestrator: Redis (localhost:6379)"
+echo "🤖 AI Server: Running in background (PID: $AI_SERVER_PID)"
+echo "📊 Orchestrator Service: Running in background (PID: $ORCHESTRATOR_PID)"
+echo "🗄️  Redis Queue: localhost:6379"
 echo "========================================"
+echo "Press Ctrl+C to stop all services"
 echo ""
 
 python distributed/interface_server.py
 
 # Cleanup on exit
 echo ""
-echo "Shutting down servers..."
+echo "Shutting down all services..."
 kill $AI_SERVER_PID 2>/dev/null
-echo "✓ System stopped"
+kill $ORCHESTRATOR_PID 2>/dev/null
+echo "✓ All services stopped"

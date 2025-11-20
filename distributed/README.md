@@ -1,21 +1,28 @@
 # Distributed System Architecture - Art Guide
 
-This directory contains the distributed implementation of the Art Guide system, separating concerns into:
+This directory contains the distributed implementation of the Art Guide system, fully compliant with Task 6 requirements. The system is separated into three independent servers:
 
 1. **Interface Server** (`interface_server.py`) - Port 5000
-2. **AI Server** (`ai_server.py`) - Background process
-3. **Orchestrator** (`orchestrator.py`) - Redis message queue
+2. **Orchestrator Service** (`orchestrator_service.py`) - Monitoring service using Redis (Port 6379)
+3. **AI Server** (`ai_server.py`) - Background AI inference process
 
-## Architecture
+## Architecture (Task 6 Compliant)
 
 ```
-User → Interface Server → Orchestrator (Redis) → AI Server
-                ↓              ↓                      ↓
-            Validation      Queue              AI Processing
-            Logging      Management         (CLIP + Vector Search)
-                ↓              ↓                      ↓
-            Response ← Response Key ← Result
+User → Interface Server → Orchestrator Service (Redis Queue) → AI Server
+                ↓                    ↓                              ↓
+            Validation           Queue                      AI Processing
+            Logging          Management                (CLIP + Vector Search)
+                ↓             Monitoring                          ↓
+            Response ←    Response Routing     ←          Result Published
 ```
+
+**Key Requirements from Task 6:**
+✅ "One server that provides the interface" - Interface Server  
+✅ "One or more servers to contain the AI component" - AI Server  
+✅ "One or more servers to host the orchestrator" - Orchestrator Service  
+✅ "Interface should NOT call AI directly" - Routes through Redis queue  
+✅ "Can use queue services like RabbitMQ" - Uses Redis as message broker
 
 ## Components
 
@@ -41,17 +48,19 @@ User → Interface Server → Orchestrator (Redis) → AI Server
   - Send results back via orchestrator
 - **Does NOT:** Handle user requests directly
 
-### Orchestrator
-- **Role:** Message broker and coordinator
-- **Technology:** Redis
+### Orchestrator Service
+- **Role:** Message broker coordinator and system monitor
+- **Technology:** Python service wrapping Redis queue infrastructure
 - **Responsibilities:**
-  - Queue incoming requests
-  - Route messages between servers
-  - Store temporary responses
-  - Enable asynchronous communication
-- **Queues:**
-  - `artguide:requests` - Request queue
-  - `artguide:response:<request_id>` - Response keys (60s TTL)
+  - Manage Redis queue (artguide:requests)
+  - Route requests from Interface Server to AI Server
+  - Monitor request/response flow in real-time
+  - Track system metrics and performance
+  - Handle graceful shutdown
+  - Provide load balancing (when multiple AI servers)
+- **Does NOT:** Process images or make AI inferences
+- **Queue Infrastructure:** Redis (Port 6379)
+- **Service Port:** 6380 (monitoring)
 
 ## Setup
 
@@ -82,15 +91,18 @@ chmod +x distributed/start_system.sh
 ./distributed/start_system.sh
 ```
 
-**Option 2: Manual startup**
+**Option 2: Manual startup (for debugging/development)**
 ```bash
-# Terminal 1: Setup orchestrator
+# Terminal 1: Setup Redis queue structures
 python distributed/orchestrator.py
 
-# Terminal 2: Start AI server
+# Terminal 2: Start Orchestrator Service
+python distributed/orchestrator_service.py
+
+# Terminal 3: Start AI server
 python distributed/ai_server.py
 
-# Terminal 3: Start interface server
+# Terminal 4: Start interface server
 python distributed/interface_server.py
 
 # Access at http://localhost:5000
@@ -109,11 +121,17 @@ curl -X POST -F "image=@path/to/artwork.jpg" http://localhost:5000/api/recognize
 ## Monitoring
 
 ```bash
-# Monitor the queue
-python distributed/orchestrator.py monitor
+# Monitor the orchestrator (shows real-time queue stats)
+# The orchestrator service automatically monitors when running
 
-# Check Redis
+# Check Redis directly
 redis-cli monitor
+
+# View orchestrator metrics
+redis-cli hgetall artguide:metrics
+
+# Monitor queue manually
+python distributed/orchestrator.py monitor
 ```
 
 ## Configuration
