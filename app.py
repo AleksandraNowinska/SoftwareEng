@@ -237,9 +237,7 @@ including innovative use of color, composition, and subject matter.
 
 The artwork holds significant cultural and historical importance, representing 
 a key moment in the evolution of art. For more detailed information about this 
-specific work, please consult museum resources or art historical databases.
-
-Note: Full AI-generated descriptions require Gemini API configuration."""
+specific work, please consult museum resources or art historical databases."""
 
 
 # ============================================================================
@@ -304,9 +302,9 @@ def recognize(img, show_context):
 
     if show_context:
         neighbors = results[["artist", "title", "period", "distance"]].to_dict(orient="records")
-        return f"Recognized: {artist} (confidence {conf:.4f})", img, description + "\nContext: " + str(neighbors)
+        return f"Recognized: {artist}", img, description + "\nContext: " + str(neighbors)
     else:
-        return f"Recognized: {artist} (confidence {conf:.4f})", img, description
+        return f"Recognized: {artist}", img, description
 
 
 # ============================================================================
@@ -315,10 +313,15 @@ def recognize(img, show_context):
 
 # Collect sample images for quick demo
 sample_images = []
+sample_labels = {}
 if os.path.exists(SAMPLE_IMAGES_DIR):
-    for file in os.listdir(SAMPLE_IMAGES_DIR):
+    for file in sorted(os.listdir(SAMPLE_IMAGES_DIR)):
         if file.lower().endswith((".jpg", ".jpeg", ".png")):
-            sample_images.append(os.path.join(SAMPLE_IMAGES_DIR, file))
+            full_path = os.path.join(SAMPLE_IMAGES_DIR, file)
+            sample_images.append(full_path)
+            # Create friendly label from filename (e.g., "Monet_artwork_1.jpg" -> "Monet - Artwork 1")
+            label = file.replace("_", " ").replace(".jpg", "").replace(".jpeg", "").replace(".png", "").title()
+            sample_labels[full_path] = label
 
 # ============================================================================
 # Gradio Interface Definition
@@ -332,13 +335,17 @@ with gr.Blocks() as demo:
     with gr.Row():
         with gr.Column():
             img_input = gr.Image(type="pil", label="Upload artwork photo")
-            sample = gr.Dropdown(sample_images, label="Or choose a sample image", type="value")
+            sample = gr.Dropdown(
+                choices=[(sample_labels.get(p, p), p) for p in sample_images] if sample_images else [],
+                label="Or choose a sample image",
+                type="value"
+            )
             show_context = gr.Checkbox(label="Show retrieved context", value=False)
             run_btn = gr.Button("Recognize Artwork")
         with gr.Column():
             label_output = gr.Textbox(label="Recognition Result")
+            desc_output = gr.Textbox(label="Description", lines=12, max_lines=20)
             img_output = gr.Image(label="Preview")
-            desc_output = gr.Textbox(label="Description")
 
     def run_pipeline(uploaded, sample_path, show_context):
         if uploaded is None and sample_path:

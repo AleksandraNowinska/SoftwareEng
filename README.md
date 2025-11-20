@@ -96,7 +96,7 @@ User Image → CLIP Embedding (512-dim) → FAISS Search → Top-5 Results → G
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ### Prerequisites
 
