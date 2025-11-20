@@ -202,21 +202,23 @@ def generate_description(artist: str, title: str, period: str) -> str:
     """
     if gemini_client is not None:
         try:
-            prompt = f"""You are a knowledgeable and engaging museum tour guide. 
-Provide an accessible, conversational explanation of this artwork for visitors.
-Keep your description between 150-250 words.
+            prompt = f"""You are an enthusiastic and knowledgeable art museum tour guide. Generate a comprehensive, engaging description for this artwork.
 
-Artwork: '{title}'
-Artist: {artist}
-Period: {period}
+**Artwork Details:**
+- Artist: {artist}
+- Title: {title}
+- Period/Style: {period}
 
-Include:
-1. Brief artist background and their significance
-2. Historical/cultural context of the period
-3. Notable features or techniques in this specific work
-4. Why this artwork matters in art history
+**Instructions:**
+Create a detailed 300-400 word description structured in the following sections:
 
-Use a warm, enthusiastic tone that makes art accessible to everyone."""
+1. **Introduction** (2-3 sentences): Welcome visitors and introduce the artwork with enthusiasm
+2. **Artist Background** (3-4 sentences): Discuss the artist's significance, life, and contribution to art history
+3. **Artistic Analysis** (4-5 sentences): Analyze the techniques, style, colors, composition, and visual elements
+4. **Historical Context** (3-4 sentences): Explain the period, movement, and cultural significance
+5. **Legacy & Impact** (2-3 sentences): Describe the artwork's influence and importance today
+
+Write in a warm, conversational tone that educates and inspires museum visitors. Use vivid language and make art history accessible to everyone."""
             
             response = gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
