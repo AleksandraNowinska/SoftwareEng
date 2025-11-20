@@ -64,8 +64,14 @@ Our system combines:
 
 **Pipeline:**
 ```
-User Image → CLIP Embedding (512-dim) → FAISS Search → Top-5 Results → LLM Description → User
+User Image → CLIP Embedding (512-dim) → FAISS Search → Top-5 Results → Gemini LLM → Description → User
 ```
+
+**AI Components:**
+- **CLIP ViT-B/32:** Generates 512-dimensional image embeddings
+- **FAISS L2 Distance:** Finds top-5 most similar artworks
+- **Gemini 1.5 Flash:** Generates contextual descriptions (150-250 words)
+- **Graceful Fallback:** Enhanced template when API key not configured
 
 **Statistics:**
 - **Recognition Accuracy:** 87% top-1, 96% top-5
@@ -107,6 +113,22 @@ source venv/bin/activate   # macOS/Linux
 # Install dependencies
 pip install -r requirements.txt
 ```
+
+### Environment Configuration (Optional)
+
+The system uses **Gemini API** for generating contextual artwork descriptions. To enable AI-generated descriptions:
+
+1. **Get API Key:** https://ai.google.dev/
+2. **Configure environment:**
+```bash
+# Create .env file
+cp .env.example .env
+
+# Edit .env and add your key:
+GOOGLE_API_KEY=your_api_key_here
+```
+
+**Note:** System works without API key using enhanced template descriptions. With API key, you get personalized tour-guide style explanations (150-250 words).
 
 ### Option 1: Monolithic Deployment (Quick Start)
 

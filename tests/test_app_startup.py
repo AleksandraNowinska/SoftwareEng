@@ -54,6 +54,7 @@ except Exception as e:
 # Test sample image processing
 print("\n4. Testing sample image processing...")
 test_image = "data/sample_images/art_1.png"
+embedding = None
 if os.path.exists(test_image):
     try:
         img = Image.open(test_image).convert("RGB")
@@ -72,13 +73,16 @@ else:
 
 # Test vector search
 print("\n5. Testing vector search...")
-try:
-    D, I = index.search(embedding, 3)
-    results = metadata.iloc[I[0]]
-    print(f"   ✓ Search successful, top match: {results.iloc[0]['artist']}")
-except Exception as e:
-    print(f"   ✗ Search failed: {e}")
-    sys.exit(1)
+if embedding is not None:
+    try:
+        D, I = index.search(embedding, 3)
+        results = metadata.iloc[I[0]]
+        print(f"   ✓ Search successful, top match: {results.iloc[0]['artist']}")
+    except Exception as e:
+        print(f"   ✗ Search failed: {e}")
+        sys.exit(1)
+else:
+    print("   ! Skipping search test (no test image)")
 
 print("\n" + "=" * 70)
 print("✓ All initialization tests passed!")

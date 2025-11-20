@@ -28,6 +28,14 @@ torch.set_num_threads(1)  # Reduce overhead
 # Now import transformers (which triggers torchvision)
 from transformers import CLIPProcessor, CLIPModel
 
+# LLM Integration (Gemini API)
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    print("Warning: langchain-google-genai not installed. Using placeholder descriptions.")
+
 # ============================================================================
 # Configuration
 # ============================================================================
@@ -61,6 +69,24 @@ if not os.path.exists(LOG_PATH):
     with open(LOG_PATH, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["timestamp", "artist", "confidence", "response_time"])
+
+# Initialize Gemini LLM (if API key available)
+gemini_llm = None
+if GEMINI_AVAILABLE:
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if api_key:
+        try:
+            gemini_llm = ChatGoogleGenerativeAI(
+                model="gemini-1.5-flash",  # Using Flash for faster responses
+                google_api_key=api_key,
+                temperature=0.7
+            )
+            print("✓ Gemini LLM initialized successfully")
+        except Exception as e:
+            print(f"Warning: Failed to initialize Gemini LLM: {e}")
+            gemini_llm = None
+    else:
+        print("Info: GOOGLE_API_KEY not set. Using placeholder descriptions.")
 
 
 # ============================================================================
@@ -149,11 +175,10 @@ def search_index(img: Image.Image, k: int = 5):
 
 def generate_description(artist: str, title: str, period: str) -> str:
     """
-    Generate a descriptive explanation of an artwork.
+    Generate a descriptive explanation of an artwork using Gemini LLM.
     
-    Currently a placeholder function that returns templated text.
-    In production, this should be replaced with LLM API call (Gemini, GPT-4, etc.)
-    to generate contextual, tour-guide style descriptions.
+    Provides contextual, tour-guide style descriptions of artworks. Falls back
+    to template-based descriptions if Gemini API is not available.
     
     Args:
         artist (str): Name of the artist
@@ -161,30 +186,57 @@ def generate_description(artist: str, title: str, period: str) -> str:
         period (str): Historical period or artistic movement
         
     Returns:
-        str: Human-readable description of the artwork including artist background,
-             period context, and artistic significance.
+        str: Human-readable description including artist background,
+             period context, and artistic significance (2-3 paragraphs).
     
     Example:
-        >>> desc = generate_description("Van Gogh", "Starry Night", "Post-Impressionism")
-        >>> print(desc)
-        This is 'Starry Night' by Van Gogh, created in the Post-Impressionism period...
-    
-    TODO:
-        Replace with LLM API integration using LangChain:
-        ```python
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
-        system_prompt = "You are a knowledgeable art tour guide..."
-        response = llm.invoke([system_prompt, user_query])
-        return response.content
-        ```
+        >>> desc = generate_description("Vincent van Gogh", "Starry Night", "Post-Impressionism")
+        >>> print(desc[:100])
+        "The Starry Night" by Vincent van Gogh is one of the most iconic paintings...
     
     Notes:
-        - Placeholder ensures system works without LLM API credentials
-        - Maintains same interface for easy swap to LLM
+        - Uses Gemini 1.5 Flash if GOOGLE_API_KEY environment variable is set
+        - Falls back to placeholder template if API unavailable
+        - Response typically 150-300 words in tour-guide conversational style
     """
-    # Placeholder for LLM
-    return f"This is '{title}' by {artist}, created in the {period} period. More contextual details will be generated here."
+    if gemini_llm is not None:
+        try:
+            system_prompt = """You are a knowledgeable and engaging museum tour guide. 
+Your role is to provide accessible, conversational explanations of artworks to visitors 
+with varying levels of art knowledge. Keep descriptions between 150-250 words.
+
+Include:
+1. Brief artist background and their significance
+2. Historical/cultural context of the period
+3. Notable features or techniques in this specific work
+4. Why this artwork matters in art history
+
+Use a warm, enthusiastic tone that makes art accessible to everyone."""
+
+            user_query = f"Tell me about '{title}' by {artist} from the {period} period."
+            
+            response = gemini_llm.invoke([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_query}
+            ])
+            
+            return response.content
+        except Exception as e:
+            print(f"Warning: Gemini API call failed: {e}. Using placeholder.")
+            # Fall through to placeholder
+    
+    # Placeholder fallback (when Gemini unavailable)
+    return f"""This is '{title}' by {artist}, created during the {period} period.
+
+{artist} was a renowned artist whose work exemplified the {period} movement. 
+This particular piece showcases the characteristic techniques and themes of that era, 
+including innovative use of color, composition, and subject matter.
+
+The artwork holds significant cultural and historical importance, representing 
+a key moment in the evolution of art. For more detailed information about this 
+specific work, please consult museum resources or art historical databases.
+
+Note: Full AI-generated descriptions require Gemini API configuration."""
 
 
 # ============================================================================

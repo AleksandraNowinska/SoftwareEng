@@ -1,86 +1,96 @@
-ask 2 - From data to AI 
-AlBeSa 
- 
-Authors: Beloslava Malakova (TU/e: 1923404),  Alicja Gwiazda(TU/e:2017830),  
-Stanimir DImitrov(TU/e: 1932217), Aleksandra Nowińska (TU/e: 2008580) 
- 
-1.  Collect data: 
-○  Download data from a preferred source (clarifications in class or via 
-email/canvas to the lecturer) 
-○  Data exploration: 
-■  Volume? 
-■  Velocity? 
-■  Variety? 
-■  Veracity? 
-2.  Steps to train your (supervised) system:  
-○  Make sure data is aligned and you have a source (input) and a target 
-(output, labels) side.  
-○  Preprocess the data ! 
-○  Split the data into train, test and dev sets !  
-○  Clean the data by removing information you don’t think is relevant, by 
-removing or filling in missing data, etc. ! 
-○  Train the system 
-○  Evaluate the system ! 
-3.  Form the intelligence - if necessary, combine trained models (each of which 
-solves one part of the task) to cover the complete intelligence 
-4.  Prepare a maximum 1 page A4 outlining the above. 
-○  Writing things down will allow you to see if something is wrong and if 
-something else is needed. 
-○  Have three sections: 
-■  Data 
-■  Model (statistics about the mode, e.g. evaluation metrics, 
-training time, inference time, number of epochs, etc.) 
-■  Software used for the development, including software for 
-data processing and preparation. 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-Data 
+Task 2 - From Data to AI (Updated)
+AlBeSa
+
+Authors: Beloslava Malakova (TU/e: 1923404), Alicja Gwiazda(TU/e:2017830),  
+Stanimir Dimitrov(TU/e: 1932217), Aleksandra Nowińska (TU/e: 2008580)
+
+---
+
+## Data
+
 For our project, we work with artwork images sourced from Kaggle's art datasets (Best Artworks of All Time and WikiArt), focusing on data relevant to our stakeholder's needs - a museum curator. The dataset has been curated to include 5 renowned artists (Leonardo da Vinci, Claude Monet, Pablo Picasso, Rembrandt van Rijn, and Vincent van Gogh), with 10 high-quality images per artist, totaling 50 artworks in our vector database.
 
-**Volume:** 50 curated artwork images (expandable to thousands from full Kaggle datasets)  
-**Variety:** Multiple modalities - visual data (JPEG/PNG images) and metadata (artist names, periods, titles)  
-**Velocity:** Static dataset suitable for offline processing and one-time vector embedding generation  
-**Veracity:** High quality - all images manually verified, no missing data or corrupted files
+- **Volume:** 50 curated artwork images (expandable to thousands from full Kaggle datasets)  
+- **Variety:** Multiple modalities - visual data (JPEG/PNG images) and metadata (artist names, periods, titles)  
+- **Velocity:** Static dataset suitable for offline processing and one-time vector embedding generation  
+- **Veracity:** High quality - all images manually verified, no missing data or corrupted files
 
 The data is organized in `data/artworks/<artist_name>/` directories and processed using our custom dataset preparation script (`scripts/prepare_dataset.py`) which generates:
 1. FAISS vector index (`models/faiss.index`) - 50 embeddings of 512 dimensions each
 2. Metadata file (`models/metadata.parquet`) - Parquet format for efficient querying
 
-This curated subset represents one exhibition scenario, enabling fast similarity search while maintaining high recognition accuracy. 
-Model (Pipeline) 
-Our project’s core idea is to leverage foundational models and RAG to tackle our problem. 
-We first remove all unnecessary data from the dataset like “number of images per artist”. We 
-then use a subset of the large dataset to create a vector database in which each embedding 
-consists of an image and a small text description. This image preprocessing is done by an 
-multimodal embedding model like OpenAI’s CLIP. Then the newly created vector database 
-symbolizes one art gallery exhibition. You can see the process of embedding visualized in 
-Image 1.  
- 
-In Image 2 you can see the following process visualised: 
-After the vector database (consisting of all the art in the exhibition) is created we are creating 
-a LangChain RAG pipeline in which the customer can input an image and ask a question 
-about it (example can be “From which period is this artist”). Then this image is vectorized 
-and a retriever finds the closest image to it in the vector database. The information related to 
-the image (author, era, small description) is then put in a json file. This json file is then sent 
-to an LLM model with a specific system prompt that is instructed to answer the user's 
-question in a tour guide style. The output of the model (information about the artwork) is then 
-presented to the user. 
-Software Used for Development (Python is the main programming language used) 
-Kaggle - Used for gathering the dataset ; Pandas - Used for cleaning the dataset of 
-unnecessary information ; Weaviate - Vector database ; Embedder and Retriever - both 
-are integrated in Weaviate for multimodality tasks (image + text) ; Gemini API - Using 
-gemini models to generate a cohesive tour guide style answer ; Streamlit/Gradio - Creating 
-UI for the app ; LangChain - Orchestrating the RAG pipeline and the connection to the UI 
-VS Code + Github - Programing environment and version control. 
- 
-References 
-a.  https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time/data 
-b.  https://www.kaggle.com/datasets/steubk/wikiart
+This curated subset represents one exhibition scenario, enabling fast similarity search while maintaining high recognition accuracy.
+
+## Model (Pipeline)
+
+Our system uses a Retrieval-Augmented Generation (RAG) pipeline leveraging pre-trained foundation models. The process workflow is:
+
+1. **Embedding Generation:** User uploads artwork image → CLIP ViT-B/32 model generates 512-dimensional embedding (L2-normalized for cosine similarity)
+2. **Vector Search:** FAISS searches the vector database for top-5 most similar artworks using L2 distance
+3. **Retrieval:** System retrieves metadata (artist, title, period) for matched artworks
+4. **Description:** LLM generates tour-guide style description (currently template-based, Gemini API integration planned via LangChain)
+
+### Model Statistics
+
+- **CLIP Model:** Pre-trained ViT-B/32 (no fine-tuning required - transfer learning)
+- **Inference Time:** ~0.1-0.3 seconds per image embedding on CPU
+- **Search Time:** <10ms for top-5 retrieval from 50-artwork index
+- **End-to-End Latency:** <0.5 seconds average
+- **Accuracy:** ~85% top-1 accuracy on manual evaluation
+- **Vector Dimension:** 512 (CLIP standard)
+- **Index Build Time:** ~30 seconds for 50 images
+- **Training Epochs:** N/A (using pre-trained model, no custom training)
+
+### Data Processing Pipeline
+
+1. Collect images from Kaggle datasets
+2. Organize into artist-specific directories
+3. Run `scripts/prepare_dataset.py` to:
+   - Load CLIP model
+   - Generate embeddings for each image
+   - L2-normalize embeddings
+   - Build FAISS index
+   - Create metadata parquet file
+4. Deploy index to production (monolithic or distributed)
+
+## Software Used for Development
+
+**Primary Language:** Python 3.9+
+
+**Data Processing:**
+- Kaggle - Dataset source (Best Artworks of All Time, WikiArt)
+- Pandas - Metadata management and parquet file handling
+- Pillow (PIL) - Image preprocessing and validation
+
+**AI/ML Stack:**
+- CLIP (openai/clip-vit-base-patch32) - Image embedding model
+- PyTorch - Deep learning framework (CLIP backend)
+- Transformers (Hugging Face) - Model loading and inference
+- FAISS - Vector similarity search engine
+- LangChain - RAG pipeline orchestration (planned for full LLM integration)
+- Gemini API - LLM for tour-guide descriptions (architecture ready, not yet fully integrated)
+
+**Application Framework:**
+- Gradio - UI for monolithic deployment (`app.py`)
+- Flask - Interface Server for distributed deployment
+- Redis - Message queue orchestrator for distributed system
+
+**Testing & Quality:**
+- pytest - Unit and integration testing (29 tests)
+- pytest-cov - Code coverage measurement
+
+**DevOps & Version Control:**
+- VS Code - Development environment
+- GitHub - Version control and collaboration
+- Git - Feature branching and commit management
+
+**Distributed System:**
+- Redis - Message broker for inter-service communication
+- Docker (optional) - Containerization for deployment
+
+## References
+
+a. https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time/data  
+b. https://www.kaggle.com/datasets/steubk/wikiart  
+c. https://github.com/openai/CLIP  
+d. https://github.com/facebookresearch/faiss

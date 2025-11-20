@@ -18,6 +18,14 @@ import faiss
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
 
+# LLM Integration (Gemini API)
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    print("Warning: langchain-google-genai not installed. Using placeholder descriptions.")
+
 # Configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
@@ -46,6 +54,24 @@ else:
     print("Warning: FAISS index or metadata not found. Running without index.")
     index = None
     metadata = pd.DataFrame(columns=["artist", "title", "period", "image_path"])
+
+# Initialize Gemini LLM (if API key available)
+gemini_llm = None
+if GEMINI_AVAILABLE:
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if api_key:
+        try:
+            gemini_llm = ChatGoogleGenerativeAI(
+                model="gemini-1.5-flash",
+                google_api_key=api_key,
+                temperature=0.7
+            )
+            print("✓ Gemini LLM initialized successfully")
+        except Exception as e:
+            print(f"Warning: Failed to initialize Gemini LLM: {e}")
+            gemini_llm = None
+    else:
+        print("Info: GOOGLE_API_KEY not set. Using placeholder descriptions.")
 
 
 def embed_image(img: Image.Image) -> np.ndarray:
@@ -91,8 +117,7 @@ def search_index(img: Image.Image, k: int = 5):
 
 def generate_description(artist: str, title: str, period: str) -> str:
     """
-    Generate artwork description.
-    Currently a placeholder - will be connected to LLM API.
+    Generate artwork description using Gemini LLM or placeholder.
     
     Args:
         artist: Artist name
@@ -100,9 +125,35 @@ def generate_description(artist: str, title: str, period: str) -> str:
         period: Historical period/style
         
     Returns:
-        Generated description
+        Generated tour-guide style description (150-250 words)
     """
-    # TODO: Connect to Gemini API or other LLM
+    if gemini_llm is not None:
+        try:
+            system_prompt = """You are a knowledgeable and engaging museum tour guide. 
+Provide accessible, conversational explanations of artworks to visitors with varying levels 
+of art knowledge. Keep descriptions between 150-250 words.
+
+Include:
+1. Brief artist background and significance
+2. Historical/cultural context of the period
+3. Notable features or techniques in this work
+4. Why this artwork matters in art history
+
+Use a warm, enthusiastic tone that makes art accessible to everyone."""
+
+            user_query = f"Tell me about '{title}' by {artist} from the {period} period."
+            
+            response = gemini_llm.invoke([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_query}
+            ])
+            
+            return response.content
+        except Exception as e:
+            print(f"Warning: Gemini API call failed: {e}. Using placeholder.")
+            # Fall through to placeholder
+    
+    # Placeholder fallback
     description = (
         f"This artwork, titled '{title}', was created by {artist} during the {period} period. "
         f"{artist} is recognized as a significant figure in the {period} movement, "
