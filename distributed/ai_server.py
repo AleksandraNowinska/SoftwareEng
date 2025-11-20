@@ -1,9 +1,3 @@
-"""
-AI Server for Art Guide Distributed System
-Handles AI inference: embedding generation, vector search, LLM description.
-Listens to orchestrator queue and processes recognition requests.
-"""
-
 import os
 import sys
 import json
@@ -11,7 +5,6 @@ import time
 import base64
 import io
 
-# Load environment variables FIRST
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -31,7 +24,6 @@ except ImportError:
     GEMINI_AVAILABLE = False
     print("Warning: google-genai not installed. Using placeholder descriptions.")
 
-# Configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REQUEST_QUEUE = "artguide:requests"
@@ -183,8 +175,21 @@ def process_request(request_data):
     """
     try:
         request_id = request_data['request_id']
-        image_b64 = request_data['image']
+        image_b64 = request_data.get('image')
         show_context = request_data.get('show_context', False)
+        
+        # Input validation
+        if not image_b64:
+            return {
+                'request_id': request_id,
+                'status': 'error',
+                'message': 'No image provided',
+                'artist': 'Unknown',
+                'title': 'Unknown',
+                'period': 'Unknown',
+                'confidence': 0.0,
+                'description': 'Please upload an image to recognize an artwork.'
+            }
         
         # Decode image
         image_bytes = base64.b64decode(image_b64)

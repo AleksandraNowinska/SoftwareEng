@@ -1,22 +1,6 @@
-"""
-Art Guide - AI-Powered Artwork Recognition System
-Main application file for standalone/monolithic deployment.
-
-This application uses CLIP embeddings and FAISS vector search to identify
-artworks from user-uploaded photos, then generates descriptive explanations.
-
-For distributed deployment, see the distributed/ directory.
-
-Authors: AlBeSa Team (Beloslava Malakova, Alicja Gwiazda, 
-         Stanimir Dimitrov, Aleksandra Nowińska)
-Version: 1.0
-"""
-
 import os
 import time
 import csv
-
-# Load environment variables FIRST (before any other imports)
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -26,11 +10,9 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-# Pre-load torch to avoid slow dynamic compilation during transformers import
 import torch
-torch.set_num_threads(1)  # Reduce overhead
+torch.set_num_threads(1) 
 
-# Now import transformers (which triggers torchvision)
 from transformers import CLIPProcessor, CLIPModel
 
 # LLM Integration (Gemini API)
@@ -89,10 +71,6 @@ if GEMINI_AVAILABLE:
     else:
         print("Info: GOOGLE_API_KEY not set. Using placeholder descriptions.")
 
-
-# ============================================================================
-# Core AI Functions
-# ============================================================================
 
 def embed_image(img: Image.Image) -> np.ndarray:
     """
@@ -279,6 +257,10 @@ def recognize(img, show_context):
         - Returns error message if no index loaded
         - Gracefully handles search failures
     """
+    # Input validation
+    if img is None:
+        return "Error: No image provided", None, "Please upload an image to recognize an artwork."
+    
     start_time = time.time()
     results, emb = search_index(img, k=5)
 
@@ -309,11 +291,6 @@ def recognize(img, show_context):
         return f"Recognized: {artist}", img, description
 
 
-# ============================================================================
-# User Interface (Gradio)
-# ============================================================================
-
-# Collect sample images for quick demo
 sample_images = []
 sample_labels = {}
 if os.path.exists(SAMPLE_IMAGES_DIR):
@@ -324,10 +301,6 @@ if os.path.exists(SAMPLE_IMAGES_DIR):
             # Create friendly label from filename (e.g., "Monet_artwork_1.jpg" -> "Monet - Artwork 1")
             label = file.replace("_", " ").replace(".jpg", "").replace(".jpeg", "").replace(".png", "").title()
             sample_labels[full_path] = label
-
-# ============================================================================
-# Gradio Interface Definition
-# ============================================================================
 
 # Gradio UI
 with gr.Blocks() as demo:
@@ -357,11 +330,6 @@ with gr.Blocks() as demo:
         return recognize(uploaded, show_context)
 
     run_btn.click(run_pipeline, inputs=[img_input, sample, show_context], outputs=[label_output, img_output, desc_output])
-
-
-# ============================================================================
-# Application Entry Point
-# ============================================================================
 
 if __name__ == "__main__":
     print("=" * 60)
