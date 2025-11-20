@@ -1,0 +1,142 @@
+task 1
+
+Task 1 - Problem Definition, Goals, Measurements
+Due 11 Sep by 21:00 Points 5 Submitting a file upload File types doc and pdf Available after 1 Sep at 10:45
+Clearly define the problem.
+Get familiar with the use-case.
+Clearly state what the problem is and why it is important to be solved.
+Break down the problem into subproblems.
+Propose a solution.
+Do not try to design a software, but come up with a solution to the problem on a very high level (no code, no technology).
+Think about inputs and outputs.
+Goals/objectives definition.
+Use the hierarchy to define goals at different levels but do not try to finalize them.  There is more that we need to see before deciding which goals (milestones) we need to achieve.
+Typically these decisions are based on the dialogue between your team and the client (the entity that has come to you with the problem), in this case - the lecturer.
+Prepare a maximum of 1 page A4 outlining the above.
+Writing things down will allow you to see if something is wrong and if something else is needed.
+Have three sections:
+Problem definition
+Objectives
+Measurements / KPIs
+
+task 2
+
+Collect data:
+Download data from a preferred source (clarifications in class or via email/canvas to the lecturer)
+Data exploration:
+Volume?
+Velocity?
+Variety?
+Veracity?
+Steps to train your (supervised) system: 
+Make sure data is aligned and you have a source (input) and a target (output, labels) side.
+Preprocess the data
+Split the data into train, test and dev sets
+Clean the data by removing information you don’t think is relevant, by removing or filling in missing data, etc.
+Train the system
+Evaluate the system
+Form the intelligence - if necessary, combine trained models (each of which solves one part of the task) to cover the complete intelligence
+Prepare a maximum 1 page A4 outlining the above.
+Writing things down will allow you to see if something is wrong and if something else is needed.
+Have three sections:
+Data
+Model (statistics about the mode, e.g. evaluation metrics, training time, inference time, number of epochs, etc.)
+Software used for the development, including software for data processing and preparation.
+
+task 3 
+
+Requirements
+Define user requirements
+Define system requirements
+Software requirement specification document. 
+Clearly outline user and system requirements.
+Clearly outline functional and non-functional requirements.
+Clearly indicate which requirements are related to the fact that an Intelligent system is being designed. That is, clearly state which are the AI-specific requirements.
+No report is needed for this task. You need to submit the SRS document.
+You can follow the attached template: SE4CSAI_SRS_Document_Template.docxDownload SE4CSAI_SRS_Document_Template.docx
+Do not write more than 4 pages (0.5-1 page of introduction, 0.5-1 for user requirements, 1-2 for system requirements and 0.5 for AI specific requirements).
+
+task 4
+
+Project management:
+Create a project in trello or jira (add me as a collaborator, but do not assign implementation tasks to me :) )
+Use your software requirements document to come up with implementation tasks
+Assign priorities and who is responsible.
+Identify expected time for implementation and implementation details (programming language, APIs, data, etc.)
+Follow Agile scrum methodology:
+Sprints should be of 1 week (simply due to time limitations)
+Assign a scrum master; for each sprint it should be a different person; if you have exhausted the list of people of your team, start from the beginning
+Try to do a 5-minutes scrum every 2 days
+Define tasks (todos)
+Redefine requirements when necessary (update your requirements document, but keep a backup of the original one so that at the end you can trace the differences)
+User stories are not necessary (we have a limited time and the project should be defined almost at 100%).
+Update your project board continuously (I will be monitoring it on irregular basis)
+Create a github repository:
+Write code and upload it to the repository
+Create at least 2 branches
+Prepare a half a page report:
+Outline what you have done, who has been the scrum master in these two weeks and what is your experience.
+Note the url of your github and what branches you created and for what purpose.
+Notice 1: It is not intended that you finish your full implementation within this two weeks.
+Notice 2: If you are following a test-first development approach beware that we will cover testing and future class.
+Notice 3: After this task is finished, you will most probably continue working on your project. Continue following Agile.
+ 
+task 5
+
+Continue the implementation:
+Select tasks from the ToDo list and implement them
+Add new tasks to the ToDo list
+Test the software:
+Define at least 5 unit tests and at least 3 integration tests for your code
+Define the test cases, the test data and the results
+These tests should run automatically. Depending on the language you are writing your code in, use the appropriate testing tool.
+Update the repo on regular basis.
+Demonstrate the testing: present your tests in front of the class during the practical session after the deadline 
+Prepare a maximum of one page report to outline the test cases, test data, results and the why you decided for these tests
+
+task 6 - scalling up
+Until now you should have implemented or are implementing parts of your software that, at the end, you should connect in a well-orchestrated system that fulfills the overall objective. The different components, models are perhaps on one computer. This task is about organising these building blocks in an effective distributed software, following the architecture we have seen.
+
+To do so, you should develop (at least):
+
+One server that provides the interface. It can deal with user requests (sending them to the orchestrator), check for errors, store data, etc. This server should not call directly the AI component.
+One or more servers to contain the AI component
+One or more servers to host the orchestrator. The orchestrator can be implemented using queue services, such as RabbitMQ or using a database, or other ways to provide an effective intermediator between the interface and the AI component.
+It is not required to use multiple machines; one machine can host many different logical servers.
+This distributed implementation can be done locally (using your machines) or on the cloud. If you wish to do that, please let me know.
+Prepare 1 page preliminary report.
+
+
+task 7
+Finalize your code:
+
+Clean your code
+Document your code
+Ensure all code works (run tests)
+Make sure everything is committed to your repository and that it is in the master branch
+Operation:
+
+Make sure your software runs as designed
+Check and update your requirements document to make sure they correspond to the software design
+AI:
+
+Ensure that the AI model(s) work(s) and that the appropriate APIs are in place
+Check that your models are the latest version/update
+Value Sensitive Design?
+
+Would you have conducted the design, development and testing differently considering the VSD principles?
+Environmental aspects (Comment on the carbon footprint of your project):
+
+What can you say about the AI component?
+What can you say about the non-AI part of your system?
+Teamwork:
+
+What was/were the main role/s and tasks of each member of your team
+How did you ensure that you work as a team
+What were the major challenges and how did you overcome them
+Anything else that shows your team effort in achieving the objectives of this task
+Report:
+
+Compile your final report by concatenating the intermediate reports (for Task 1 to 6) and add the part related to this task (Task 7)
+Revise them to have a coherent story (no need to rewrite them)
+Add a section (half a page maximum) about teamwork and max half a page on value sensitive design and environmental impact (answering the questions above).

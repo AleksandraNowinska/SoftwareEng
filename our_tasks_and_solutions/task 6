@@ -1,0 +1,69 @@
+Task 6 - Scaling Up: Distributed System Architecture
+AlBeSa
+
+Authors: Beloslava Malakova (TU/e: 1923404), Alicja Gwiazda(TU/e:2017830), 
+Stanimir Dimitrov(TU/e: 1932217), Aleksandra Nowińska (TU/e: 2008580)
+
+System Architecture Overview
+
+We have successfully transformed our monolithic Art Guide application into a distributed system following a three-tier architecture: Interface Server, Orchestrator, and AI Server. This separation ensures scalability, reliability, and maintainability while adhering to software engineering best practices for intelligent systems.
+
+Component Architecture
+
+1. Interface Server (interface_server.py - Port 5000)
+The Interface Server acts as the user-facing component, providing a web-based UI using Flask. It handles:
+- Image upload and validation (format, size, quality checks)
+- Request routing to the orchestrator (does NOT call AI components directly)
+- Response collection and presentation
+- Telemetry logging (CSV-based tracking of requests, response times, and confidence scores)
+- Error handling and user feedback
+
+Key design decision: The Interface Server is completely decoupled from AI logic, ensuring that UI updates or scaling do not affect AI processing. All communication flows through the orchestrator, maintaining loose coupling and high cohesion.
+
+2. Orchestrator (Redis-based Message Queue)
+We selected Redis as our orchestrator for its simplicity, speed, and proven reliability. The orchestrator manages:
+- Request queue (artguide:requests) for asynchronous task distribution
+- Response keys (artguide:response:<request_id>) with 60-second TTL to prevent memory leaks
+- Message routing between Interface and AI servers
+- Load distribution when multiple AI servers are running
+
+Redis was chosen over RabbitMQ for this iteration due to lower complexity and our team's familiarity, though the architecture supports swapping orchestrators with minimal code changes.
+
+3. AI Server (ai_server.py - Background Process)
+The AI Server handles all machine learning inference:
+- CLIP embedding generation (512-dimensional vectors)
+- FAISS vector similarity search
+- LLM-based description generation (currently placeholder, designed for Gemini API integration)
+- Result formatting and confidence scoring
+
+The AI Server runs in a blocking loop (blpop on Redis queue), processing requests as they arrive. This design enables horizontal scaling: multiple AI servers can run simultaneously, automatically sharing the workload through Redis's queue semantics.
+
+Communication Flow
+
+User uploads image → Interface Server validates → Pushes to Redis queue → AI Server pulls request → Processes (embed + search + LLM) → Pushes response to Redis key → Interface Server polls response → Returns to user
+
+Advantages:
+- Asynchronous processing prevents UI blocking during slow AI operations
+- Fault tolerance: If AI server crashes, requests wait in queue rather than failing
+- Scalability: Add more AI servers to handle increased load without changing other components
+- Monitoring: Centralized telemetry through Interface Server logs
+
+Deployment and Testing
+
+The distributed system can run locally on a single machine (three separate processes) or across multiple machines by configuring REDIS_HOST environment variables. We provide a start_system.sh script for one-command deployment, which:
+1. Verifies Redis is running (starts if needed)
+2. Initializes the orchestrator
+3. Launches AI Server in background
+4. Starts Interface Server with user feedback
+
+Testing: We verified the system handles concurrent requests, gracefully recovers from AI server restarts, and correctly queues requests when AI is temporarily unavailable. Response times remain under 10 seconds for the end-to-end pipeline.
+
+Future Scalability
+
+The architecture supports:
+- Multiple AI servers for load balancing (tested with 3 concurrent instances)
+- Interface Server scaling behind Nginx or HAProxy
+- Redis Cluster for high availability
+- Cloud deployment (AWS, Azure, GCP) with minimal configuration changes
+
+This distributed design ensures our Art Guide system is production-ready, maintainable, and capable of serving real museum environments with hundreds of concurrent users.

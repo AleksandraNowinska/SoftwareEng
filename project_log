@@ -1,0 +1,47 @@
+Tasks Completed (1-5) ✅
+Task 1: Problem definition, goals, and KPIs
+Task 2: Data collection and AI model design
+Task 3 & 4: Requirements (mentioned in Trello), Agile/GitHub setup
+Task 5: Implementation started, testing planned (but not implemented)
+What You Still Need to Do:
+TASK 5: Testing (INCOMPLETE) 🔴
+You described tests but haven't implemented them. You need:
+
+5+ unit tests (e.g., test embedding generation, image upload, vector search, metadata retrieval, LLM prompt formatting)
+3+ integration tests (e.g., end-to-end pipeline, UI to retrieval, retrieval to LLM)
+Automated test framework (pytest)
+Tests must run automatically and be demonstrated
+TASK 6: Distributed Architecture (NOT STARTED) 🔴
+Currently, everything runs in one app.py file. You must create:
+
+Interface Server - handles UI, user requests, error checking, data storage
+Should NOT call AI directly
+Sends requests to orchestrator
+AI Server(s) - handles embedding generation, vector search, LLM calls
+Orchestrator - intermediates between interface and AI (use RabbitMQ, database queue, or similar)
+1-page preliminary report documenting the distributed architecture
+TASK 7: Finalization & Final Report (NOT STARTED) 🔴
+You need to:
+
+Code cleanup: Document all code, ensure everything works
+Testing: Run all tests, ensure they pass
+Git: Commit everything to master branch
+Requirements: Update SRS document to match final implementation
+AI Models: Ensure latest versions, working APIs
+Value Sensitive Design: Write 0.5 page on VSD principles
+Environmental Impact: Write 0.5 page on carbon footprint (AI + non-AI)
+Teamwork: Write 0.5 page on roles, challenges, team effort
+Final Report: Concatenate all task reports (1-7) + new sections above
+Missing Deliverables:
+SRS Document (Task 3) - No evidence of this in your repo
+Test files (Task 5) - Not implemented
+Distributed system (Task 6) - Current app is monolithic
+Final comprehensive report (Task 7)
+Priority Order:
+Implement automated tests (Task 5 completion)
+Create SRS document if missing (Task 3)
+Refactor into distributed architecture (Task 6)
+Write final report sections (Task 7)
+Code cleanup and documentation
+Ensure all commits are in master branch
+Would you like me to help you start with any specific task? I recommend beginning with the automated tests since they're fundamental to the remaining work.

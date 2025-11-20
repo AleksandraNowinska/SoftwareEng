@@ -24,3 +24,14 @@ Pillow
 # Utils
 tqdm
 python-dotenv
+
+# Testing
+pytest
+pytest-cov
+
+# Message Queue (for distributed architecture)
+pika  # RabbitMQ client
+redis
+
+# Web framework (for distributed interface server)
+flask

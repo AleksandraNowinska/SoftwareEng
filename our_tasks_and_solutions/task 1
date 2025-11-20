@@ -1,0 +1,99 @@
+Task 1 - Problem Definition, Goals, Measurements 
+AlBeSa 
+ 
+Authors: Beloslava Malakova (TU/e: 1923404),  Alicja Gwiazda(TU/e:2017830 ),  
+Stanimir DImitrov(TU/e: 1932217), Aleksandra Nowińska (TU/e: 2008580) 
+ 
+Expectations: 
+1.  Clearly define the problem. 
+○  Get familiar with the use-case. 
+○  Clearly state what the problem is and why it is important to be solved. 
+○  Break down the problem into subproblems. 
+2.  Propose a solution. 
+○  Do not try to design a software, but come up with a solution to the 
+problem on a very high level (no code, no technology). 
+○  Think about inputs and outputs. 
+3.  Goals/objectives definition. 
+○  Use the hierarchy to define goals at different levels but do not try to 
+finalize them.  There is more that we need to see before deciding 
+which goals (milestones) we need to achieve. 
+○  Typically these decisions are based on the dialogue between your 
+team and the client (the entity that has come to you with the problem), 
+in this case - the lecturer. 
+4.  Prepare a maximum of 1 page A4 outlining the above. 
+○  Writing things down will allow you to see if something is wrong and if 
+something else is needed. 
+○  Have three sections: 
+■  Problem definition 
+■  Objectives 
+■  Measurements / KPIs 
+ 
+Idea 1: 
+Art Guide (my idea) 
+Goal: Develop an app that lets users take a photo of a painting, or a sculpture, and then 
+generates an audio + text description in English (art style, context, when it is created and so 
+on) 
+Components: 
+Image recognition (classify artwork) 
+Knowledge graph / Wikipedia API to fetch descriptions 
+Creating the app 
+Unique angle: Supports tourism/ enthusiasts accessibility 
+Scalability: Could be deployed as a simple app with take a photo window and then just audio 
+speaker and the same text for the speaker is written 
+ 
+ 
+Idea 2: “Accessible News” Reader 
+Automatically convert daily online news (both articles + embedded images/infographics) into 
+audio podcasts with contextual descriptions. 
+ 
+AI Components: 
+Web scraper + summarizer (extracts main story). 
+Image-to-audio captioning (explains infographics or memes). 
+Natural voice TTS with adaptive intonation. 
+Unique angle: Combines summarization + accessibility, targeting people who cannot easily 
+consume visual content. 
+Scalability: Continuous updates with RSS feeds, cloud pipelines for processing. 
+ 
+ 
+Problem Definition 
+When visiting museums, galleries, or cultural sites, many visitors struggle to access clear 
+and engaging information about the artwork they see. Traditional labels often provide only 
+minimal details, and guided tours are not always available, affordable, or accessible in the 
+visitor’s language. This creates a barrier for tourists, casual art enthusiasts, and especially 
+individuals with accessibility needs (e.g., people with visual impairments). 
+The problem is how to provide immediate, personalized, and understandable information 
+about artworks to a wide audience without requiring prior art knowledge. 
+We break this into subproblems: 
+1.  Artwork identification: recognizing a painting, sculpture, or object from an image 
+taken by the user. 
+2.  Contextual explanation: providing information beyond the name (art style, historical 
+context, cultural relevance). 
+3.  Accessible presentation: delivering information in multiple modes (text + audio) to suit 
+diverse user needs. 
+4.  Ease of use: ensuring the interaction is simple (e.g., “take a photo and get an 
+explanation”).  
+A high-level solution: a mobile app that allows users to take a photo of an artwork and 
+immediately receive a spoken and written explanation. The system relies on existing 
+resources (art databases, Wikipedia) to ensure reliable and scalable content delivery. 
+Objectives 
+Main Goal: Enable visitors to engage with artworks in an accessible, interactive, and 
+informative way. 
+Sub-goals: 
+-  Provide fast and accurate correct artwork recognition. 
+-  Deliver concise, contextual explanations of identified artworks beyond basic labels. 
+-  Ensure  inclusivity by offering both text and audio explanations. 
+-  Design the interface to be intuitive and simple 
+-  Support tourists and international visitors by delivering audio-first accessibility 
+-  Increase engagement in cultural spaces via interactive explanations. 
+-  Encourage adoption among tourists and casual art enthusiasts. 
+Measurements / KPIs 
+To evaluate success, we propose the following measurable criteria: 
+-  Accuracy of recognition: (% of artworks correctly identified, ≥ 85%). 
+-  Response time: average time from photo upload to output (target <10s). 
+-  User satisfaction: average rating from pilot tests (target >3/5). 
+-  Tourist adoption: number of downloads/active users in cultural sites (≥50–100 pilot 
+users) 
+-  Content richness: average length and coverage of generated descriptions (art style, 
+context, year, artist). 
+-  Accessibility impact (% of audio-mode users ≥40%). 
+-  Retention rate (% returning users ≥30% in first month). 

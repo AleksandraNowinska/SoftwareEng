@@ -1,3 +1,17 @@
+"""
+Art Guide - AI-Powered Artwork Recognition System
+Main application file for standalone/monolithic deployment.
+
+This application uses CLIP embeddings and FAISS vector search to identify
+artworks from user-uploaded photos, then generates descriptive explanations.
+
+For distributed deployment, see the distributed/ directory.
+
+Authors: AlBeSa Team (Beloslava Malakova, Alicja Gwiazda, 
+         Stanimir Dimitrov, Aleksandra Nowińska)
+Version: 1.0
+"""
+
 import os
 import time
 import csv
@@ -10,10 +24,18 @@ from PIL import Image
 from torchvision import transforms
 from transformers import CLIPProcessor, CLIPModel
 
+# ============================================================================
+# Configuration
+# ============================================================================
+
 # Load CLIP model for embeddings
 device = "cuda" if torch.cuda.is_available() else "cpu"
 clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
 clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+# ============================================================================
+# Data Loading
+# ============================================================================
 
 # Paths (adjust as needed)
 INDEX_PATH = "models/faiss.index"
@@ -37,16 +59,80 @@ if not os.path.exists(LOG_PATH):
         writer.writerow(["timestamp", "artist", "confidence", "response_time"])
 
 
+# ============================================================================
+# Core AI Functions
+# ============================================================================
+
 def embed_image(img: Image.Image) -> np.ndarray:
+    """
+    Generate CLIP embedding for an input image.
+    
+    This function processes an image using the CLIP model to generate a 512-dimensional
+    embedding vector that captures semantic visual features. The embedding is L2-normalized
+    to enable cosine similarity comparisons in the vector database.
+    
+    Args:
+        img (PIL.Image.Image): Input image in PIL format. Should be RGB mode.
+        
+    Returns:
+        np.ndarray: L2-normalized embedding vector of shape (1, 512) with dtype float32.
+                   The normalization ensures ||embedding|| = 1.0 for cosine similarity.
+    
+    Example:
+        >>> from PIL import Image
+        >>> img = Image.open("artwork.jpg")
+        >>> embedding = embed_image(img)
+        >>> embedding.shape
+        (1, 512)
+        >>> np.linalg.norm(embedding)  # Should be ~1.0
+        1.0
+    
+    Notes:
+        - Uses GPU if available (cuda) for faster inference
+        - Preprocessing (resizing, normalization) is handled by CLIPProcessor
+        - No gradients are computed (inference only)
+    """
     inputs = clip_processor(images=img, return_tensors="pt").to(device)
     with torch.no_grad():
         emb = clip_model.get_image_features(**inputs)
     emb = emb.cpu().numpy().astype("float32")
-    emb /= np.linalg.norm(emb)
+    emb /= np.linalg.norm(emb)  # L2 normalization for cosine similarity
     return emb
 
 
 def search_index(img: Image.Image, k: int = 5):
+    """
+    Search the FAISS vector database for similar artworks.
+    
+    Generates an embedding for the input image and queries the FAISS index
+    to find the k most similar artworks based on L2 distance in embedding space.
+    
+    Args:
+        img (PIL.Image.Image): Query image to search for
+        k (int): Number of top results to return (default: 5)
+        
+    Returns:
+        tuple: (results_df, embedding) where:
+            - results_df (pd.DataFrame): Top-k results with columns [artist, title, period, 
+                                        image_path, distance]. Sorted by distance (ascending).
+            - embedding (np.ndarray): The query image embedding (1, 512)
+            
+            Returns (None, None) if index is not loaded or empty.
+    
+    Example:
+        >>> img = Image.open("photo.jpg")
+        >>> results, emb = search_index(img, k=3)
+        >>> results[['artist', 'distance']]
+                   artist  distance
+        0       Van Gogh      0.15
+        1          Monet      0.23
+        2        Picasso      0.31
+    
+    Notes:
+        - Lower distance = higher similarity
+        - FAISS uses L2 distance, not cosine (but embeddings are normalized)
+        - Returns None if no index is loaded (graceful degradation)
+    """
     if index is None or len(metadata) == 0:
         return None, None
 
@@ -58,11 +144,82 @@ def search_index(img: Image.Image, k: int = 5):
 
 
 def generate_description(artist: str, title: str, period: str) -> str:
+    """
+    Generate a descriptive explanation of an artwork.
+    
+    Currently a placeholder function that returns templated text.
+    In production, this should be replaced with LLM API call (Gemini, GPT-4, etc.)
+    to generate contextual, tour-guide style descriptions.
+    
+    Args:
+        artist (str): Name of the artist
+        title (str): Title of the artwork
+        period (str): Historical period or artistic movement
+        
+    Returns:
+        str: Human-readable description of the artwork including artist background,
+             period context, and artistic significance.
+    
+    Example:
+        >>> desc = generate_description("Van Gogh", "Starry Night", "Post-Impressionism")
+        >>> print(desc)
+        This is 'Starry Night' by Van Gogh, created in the Post-Impressionism period...
+    
+    TODO:
+        Replace with LLM API integration using LangChain:
+        ```python
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
+        system_prompt = "You are a knowledgeable art tour guide..."
+        response = llm.invoke([system_prompt, user_query])
+        return response.content
+        ```
+    
+    Notes:
+        - Placeholder ensures system works without LLM API credentials
+        - Maintains same interface for easy swap to LLM
+    """
     # Placeholder for LLM
     return f"This is '{title}' by {artist}, created in the {period} period. More contextual details will be generated here."
 
 
+# ============================================================================
+# Main Recognition Pipeline
+# ============================================================================
+
 def recognize(img, show_context):
+    """
+    Main recognition pipeline: image → embedding → search → description.
+    
+    Orchestrates the complete workflow from user image to final description,
+    including telemetry logging for monitoring and analytics.
+    
+    Args:
+        img (PIL.Image.Image): User-uploaded artwork image
+        show_context (bool): If True, include similar artworks in description
+        
+    Returns:
+        tuple: (label, preview_image, description) where:
+            - label (str): Recognition result with artist and confidence
+            - preview_image (PIL.Image.Image): The input image for display
+            - description (str): Generated description (+ context if requested)
+    
+    Example:
+        >>> img = Image.open("photo.jpg")
+        >>> label, img_preview, desc = recognize(img, show_context=True)
+        >>> print(label)
+        Recognized: Van Gogh (confidence 0.9234)
+        >>> print(desc[:50])
+        This is 'Starry Night' by Van Gogh, created in...
+    
+    Side Effects:
+        - Logs request to telemetry CSV (timestamp, artist, confidence, response_time)
+        - Prints are for debugging (remove in production)
+    
+    Error Handling:
+        - Returns error message if no index loaded
+        - Gracefully handles search failures
+    """
     start_time = time.time()
     results, emb = search_index(img, k=5)
 
@@ -93,6 +250,10 @@ def recognize(img, show_context):
         return f"Recognized: {artist} (confidence {conf:.4f})", img, description
 
 
+# ============================================================================
+# User Interface (Gradio)
+# ============================================================================
+
 # Collect sample images for quick demo
 sample_images = []
 if os.path.exists(SAMPLE_IMAGES_DIR):
@@ -100,9 +261,15 @@ if os.path.exists(SAMPLE_IMAGES_DIR):
         if file.lower().endswith((".jpg", ".jpeg", ".png")):
             sample_images.append(os.path.join(SAMPLE_IMAGES_DIR, file))
 
+# ============================================================================
+# Gradio Interface Definition
+# ============================================================================
+
 # Gradio UI
 with gr.Blocks() as demo:
     gr.Markdown("# 🖼️ Art Guide – Demo App")
+    gr.Markdown("Upload an artwork photo to receive AI-powered recognition and description.")
+    
     with gr.Row():
         with gr.Column():
             img_input = gr.Image(type="pil", label="Upload artwork photo")
@@ -123,5 +290,21 @@ with gr.Blocks() as demo:
 
     run_btn.click(run_pipeline, inputs=[img_input, sample, show_context], outputs=[label_output, img_output, desc_output])
 
+
+# ============================================================================
+# Application Entry Point
+# ============================================================================
+
 if __name__ == "__main__":
+    print("=" * 60)
+    print("🎨 Art Guide - AI-Powered Artwork Recognition")
+    print("=" * 60)
+    print(f"Device: {device.upper()}")
+    print(f"Model: CLIP ViT-B/32")
+    print(f"Index: {INDEX_PATH}")
+    print(f"Artworks loaded: {len(metadata)}")
+    print("=" * 60)
+    print("Starting Gradio interface at http://localhost:7860")
+    print("Press Ctrl+C to stop")
+    print("=" * 60)
     demo.launch(server_name="0.0.0.0", server_port=7860)

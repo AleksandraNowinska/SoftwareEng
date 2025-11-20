@@ -1,0 +1,60 @@
+Task 7 - Final Report: Value Sensitive Design, Environmental Impact, and Teamwork
+AlBeSa
+
+Authors: Beloslava Malakova (TU/e: 1923404), Alicja Gwiazda(TU/e:2017830), 
+Stanimir Dimitrov(TU/e: 1932217), Aleksandra Nowińska (TU/e: 2008580)
+
+Value Sensitive Design (VSD)
+
+Reflecting on our development process through a Value Sensitive Design lens, we recognize several areas where VSD principles could have improved our approach:
+
+Stakeholder Inclusivity: While we designed for museum visitors and people with visual impairments, we could have conducted more systematic stakeholder interviews with actual users representing diverse abilities, cultural backgrounds, and technical literacy levels. This would have revealed accessibility requirements beyond audio descriptions, such as language preferences, cognitive load considerations, and cultural sensitivity in descriptions.
+
+Privacy and Consent: Our system processes user-uploaded images but does not store them permanently. However, we did not implement explicit consent mechanisms or transparency notices informing users about data processing. A VSD approach would have prioritized informed consent UI elements and clear privacy policies from the start.
+
+Cultural Bias in AI: Our dataset and LLM prompts could perpetuate Western-centric art narratives. A VSD-informed process would have included diverse art historical perspectives, evaluated training data for geographic and cultural representation, and involved curators from underrepresented communities to review descriptions for bias.
+
+Accessibility by Design: While we added accessibility features (audio, text), these were implemented late. VSD would have embedded accessibility from initial requirements, including user testing with visually impaired individuals, multilingual support planning, and consideration of motor impairment accommodations (e.g., voice input).
+
+If we were to restart this project with VSD principles, we would: (1) conduct participatory design sessions with diverse museum visitors, (2) establish an ethics review process for AI-generated descriptions, (3) implement transparent AI confidence indicators and "why this result" explanations, and (4) create mechanisms for users to report inappropriate or culturally insensitive content.
+
+Environmental Impact and Carbon Footprint
+
+AI Component:
+The environmental cost of our AI system primarily stems from two sources: model inference and training/fine-tuning. For inference, we use a pre-trained CLIP model (ViT-B/32, ~150M parameters). Each inference generates one embedding vector, which on CPU takes ~1-2 seconds and consumes approximately 0.001 kWh per request. Assuming 1000 daily requests, annual energy consumption is ~365 kWh, equivalent to ~150 kg CO2 (using average grid carbon intensity of 0.41 kg CO2/kWh). GPU inference is faster but more energy-intensive per hour, though reduced runtime may offset this.
+
+We did NOT train CLIP from scratch (which would cost ~100+ tons CO2 according to literature on large model training), instead leveraging OpenAI's pre-trained weights. This transfer learning approach drastically reduces our carbon footprint. For the LLM component (Gemini API), carbon costs are externalized to Google's infrastructure, though their data centers use renewable energy at >60% according to public reports.
+
+Vector database operations (FAISS) are CPU-bound and relatively lightweight (~0.1 seconds per search, negligible energy). Embedding generation is the primary bottleneck.
+
+Non-AI Component:
+Our web servers (Flask for Interface Server, Gradio for monolithic app) have minimal computational requirements compared to AI inference. Assuming continuous deployment on a small cloud VM (2 vCPU, 4GB RAM), annual energy consumption is ~50-100 kWh (~20-40 kg CO2). Redis orchestrator adds negligible overhead (<10W idle).
+
+Network transfer for image uploads and API calls to LLM services contributes ~0.0001 kWh per request (negligible compared to compute).
+
+Mitigation Strategies:
+To reduce environmental impact, we implemented: (1) response caching to avoid redundant AI inference, (2) batching capabilities in the distributed architecture for efficient GPU utilization, (3) telemetry logging to identify optimization opportunities. Future improvements could include: model quantization (reducing CLIP to int8, cutting inference energy by ~50%), edge deployment for local processing, and carbon-aware scheduling to run batch processes during low-carbon grid periods.
+
+Overall Assessment: Our system's carbon footprint is dominated by AI inference (~150 kg CO2/year at moderate usage). This is significantly lower than training-from-scratch approaches and comparable to other recommendation/search systems. However, as usage scales, we must monitor and optimize energy efficiency.
+
+Teamwork
+
+Roles and Responsibilities:
+Our team of four divided responsibilities strategically throughout the project lifecycle. Aleksandra (Ola) served as Scrum Master for Sprint 1 and led task planning on Trello, Git repository setup, and data preprocessing/evaluation pipeline development. She also implemented the synthetic test dataset with 250 variants from 50 artworks and baseline CLIP evaluation metrics. Stanimir (Stan) was Scrum Master for Sprint 2, focusing on vector database research and selection (Qdrant vs. Weaviate comparison), embedding generation, and integration of the retrieval system. Alicja led the LLM integration research, prompt engineering for tour-guide style descriptions, and UI development using Streamlit/Gradio. Beloslava (Bela) coordinated Sprint 3 as Scrum Master, managed documentation across all task reports, contributed to distributed architecture design, and led testing strategy formulation. For the final tasks, we adopted pair programming for critical components: Ola and Stan on distributed architecture implementation, Alicja and Bela on requirements documentation and testing.
+
+Team Collaboration:
+We ensured teamwork through regular practices: bi-daily 5-minute scrum meetings (every 2 days as per Agile requirements), weekly sprint planning sessions, and asynchronous communication via shared documents and Trello comments. Our GitHub workflow enforced code review (no direct commits to main; all changes via pull requests with at least one approval). We used pair programming for complex features, knowledge-sharing sessions to cross-train on AI/backend/frontend components, and collaborative debugging during integration phases.
+
+Major Challenges and Solutions:
+Challenge 1 - Dataset Pivot: Initially planned for a broad art recognition system, but dataset size and labeling complexity were prohibitive. Solution: Pivoted to curator-provided exhibition datasets, focusing on quality over quantity. This reframing aligned with real-world museum use cases.
+
+Challenge 2 - Vector Database Learning Curve: None of us had prior experience with Qdrant or FAISS. Solution: Stan led a research sprint, created proof-of-concept implementations for both, and shared findings in a team workshop. We documented decision rationale in our repository.
+
+Challenge 3 - Distributed Architecture Complexity: Transitioning from monolithic to distributed required rethinking error handling, async patterns, and testing. Solution: We used Redis instead of RabbitMQ to reduce learning overhead, created comprehensive documentation in distributed/README.md, and tested with simulated failures (killing AI server mid-request).
+
+Challenge 4 - Time Management Across Tasks: Balancing implementation, testing, documentation, and coursework deadlines was difficult. Solution: Bela created a shared calendar with internal deadlines 2 days before official ones, allowing buffer for revisions. Rotating Scrum Master roles ensured no single person was overburdened with coordination.
+
+Team Dynamics:
+Our collaboration was strengthened by diverse skill sets: Ola's data science background, Stan's backend development experience, Alicja's UI/UX focus, and Bela's project management expertise. We established a culture of psychological safety where team members could admit knowledge gaps without judgment, leading to more effective learning and problem-solving. Regular retrospectives after each sprint helped us continuously improve our workflow.
+
+The distributed architecture task (Task 6) exemplified our teamwork: it required coordination across all components (UI, AI, orchestrator), necessitating clear interface contracts and integration planning. We succeeded by defining API schemas early, using mock responses for parallel development, and conducting integration tests as a full team.
