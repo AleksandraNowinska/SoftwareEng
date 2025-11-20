@@ -10,6 +10,11 @@ import json
 import time
 import base64
 import io
+
+# Load environment variables FIRST
+from dotenv import load_dotenv
+load_dotenv()
+
 import redis
 import numpy as np
 import pandas as pd
@@ -20,11 +25,11 @@ from transformers import CLIPProcessor, CLIPModel
 
 # LLM Integration (Gemini API)
 try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
-    print("Warning: langchain-google-genai not installed. Using placeholder descriptions.")
+    print("Warning: google-genai not installed. Using placeholder descriptions.")
 
 # Configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
@@ -55,21 +60,17 @@ else:
     index = None
     metadata = pd.DataFrame(columns=["artist", "title", "period", "image_path"])
 
-# Initialize Gemini LLM (if API key available)
-gemini_llm = None
+# Initialize Gemini API client (if API key available)
+gemini_client = None
 if GEMINI_AVAILABLE:
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if api_key:
         try:
-            gemini_llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
-                google_api_key=api_key,
-                temperature=0.7
-            )
-            print("✓ Gemini LLM initialized successfully")
+            gemini_client = genai.Client(api_key=api_key)
+            print("✓ Gemini API client initialized successfully")
         except Exception as e:
-            print(f"Warning: Failed to initialize Gemini LLM: {e}")
-            gemini_llm = None
+            print(f"Warning: Failed to initialize Gemini client: {e}")
+            gemini_client = None
     else:
         print("Info: GOOGLE_API_KEY not set. Using placeholder descriptions.")
 
@@ -127,28 +128,30 @@ def generate_description(artist: str, title: str, period: str) -> str:
     Returns:
         Generated tour-guide style description (150-250 words)
     """
-    if gemini_llm is not None:
+    if gemini_client is not None:
         try:
-            system_prompt = """You are a knowledgeable and engaging museum tour guide. 
-Provide accessible, conversational explanations of artworks to visitors with varying levels 
-of art knowledge. Keep descriptions between 150-250 words.
+            prompt = f"""You are a knowledgeable and engaging museum tour guide. 
+Provide an accessible, conversational explanation of this artwork for visitors.
+Keep your description between 150-250 words.
+
+Artwork: '{title}'
+Artist: {artist}
+Period: {period}
 
 Include:
-1. Brief artist background and significance
+1. Brief artist background and their significance
 2. Historical/cultural context of the period
-3. Notable features or techniques in this work
+3. Notable features or techniques in this specific work
 4. Why this artwork matters in art history
 
 Use a warm, enthusiastic tone that makes art accessible to everyone."""
-
-            user_query = f"Tell me about '{title}' by {artist} from the {period} period."
             
-            response = gemini_llm.invoke([
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_query}
-            ])
+            response = gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
             
-            return response.content
+            return response.text
         except Exception as e:
             print(f"Warning: Gemini API call failed: {e}. Using placeholder.")
             # Fall through to placeholder

@@ -15,6 +15,11 @@ Version: 1.0
 import os
 import time
 import csv
+
+# Load environment variables FIRST (before any other imports)
+from dotenv import load_dotenv
+load_dotenv()
+
 import gradio as gr
 import faiss
 import numpy as np
@@ -30,11 +35,11 @@ from transformers import CLIPProcessor, CLIPModel
 
 # LLM Integration (Gemini API)
 try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
-    print("Warning: langchain-google-genai not installed. Using placeholder descriptions.")
+    print("Warning: google-genai not installed. Using placeholder descriptions.")
 
 # ============================================================================
 # Configuration
@@ -70,21 +75,17 @@ if not os.path.exists(LOG_PATH):
         writer = csv.writer(f)
         writer.writerow(["timestamp", "artist", "confidence", "response_time"])
 
-# Initialize Gemini LLM (if API key available)
-gemini_llm = None
+# Initialize Gemini API client (if API key available)
+gemini_client = None
 if GEMINI_AVAILABLE:
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if api_key:
         try:
-            gemini_llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",  # Using Flash for faster responses
-                google_api_key=api_key,
-                temperature=0.7
-            )
-            print("✓ Gemini LLM initialized successfully")
+            gemini_client = genai.Client(api_key=api_key)
+            print("✓ Gemini API client initialized successfully")
         except Exception as e:
-            print(f"Warning: Failed to initialize Gemini LLM: {e}")
-            gemini_llm = None
+            print(f"Warning: Failed to initialize Gemini client: {e}")
+            gemini_client = None
     else:
         print("Info: GOOGLE_API_KEY not set. Using placeholder descriptions.")
 
@@ -195,15 +196,19 @@ def generate_description(artist: str, title: str, period: str) -> str:
         "The Starry Night" by Vincent van Gogh is one of the most iconic paintings...
     
     Notes:
-        - Uses Gemini 1.5 Flash if GOOGLE_API_KEY environment variable is set
+        - Uses Gemini 2.5 Flash if GOOGLE_API_KEY environment variable is set
         - Falls back to placeholder template if API unavailable
         - Response typically 150-300 words in tour-guide conversational style
     """
-    if gemini_llm is not None:
+    if gemini_client is not None:
         try:
-            system_prompt = """You are a knowledgeable and engaging museum tour guide. 
-Your role is to provide accessible, conversational explanations of artworks to visitors 
-with varying levels of art knowledge. Keep descriptions between 150-250 words.
+            prompt = f"""You are a knowledgeable and engaging museum tour guide. 
+Provide an accessible, conversational explanation of this artwork for visitors.
+Keep your description between 150-250 words.
+
+Artwork: '{title}'
+Artist: {artist}
+Period: {period}
 
 Include:
 1. Brief artist background and their significance
@@ -212,15 +217,13 @@ Include:
 4. Why this artwork matters in art history
 
 Use a warm, enthusiastic tone that makes art accessible to everyone."""
-
-            user_query = f"Tell me about '{title}' by {artist} from the {period} period."
             
-            response = gemini_llm.invoke([
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_query}
-            ])
+            response = gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
             
-            return response.content
+            return response.text
         except Exception as e:
             print(f"Warning: Gemini API call failed: {e}. Using placeholder.")
             # Fall through to placeholder
