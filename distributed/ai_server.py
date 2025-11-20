@@ -76,7 +76,15 @@ def embed_image(img: Image.Image) -> np.ndarray:
         
     Returns:
         Normalized 512-dimensional embedding
+        
+    Raises:
+        ValueError: If img is None or not a valid PIL Image
     """
+    if img is None:
+        raise ValueError("Input image cannot be None")
+    if not isinstance(img, Image.Image):
+        raise ValueError(f"Expected PIL.Image.Image, got {type(img)}")
+    
     inputs = clip_processor(images=img, return_tensors="pt").to(device)
     with torch.no_grad():
         emb = clip_model.get_image_features(**inputs)
@@ -95,7 +103,14 @@ def search_index(img: Image.Image, k: int = 5):
         
     Returns:
         tuple: (results DataFrame, embedding)
+        
+    Raises:
+        ValueError: If k is invalid
     """
+    if img is None:
+        return None, None
+    if not isinstance(k, int) or k <= 0:
+        raise ValueError(f"k must be a positive integer, got {k}")
     if index is None or len(metadata) == 0:
         return None, None
 
@@ -120,6 +135,14 @@ def generate_description(artist: str, title: str, period: str) -> str:
     Returns:
         Generated tour-guide style description (150-250 words)
     """
+    # Input validation
+    if not artist or not isinstance(artist, str):
+        artist = "Unknown Artist"
+    if not title or not isinstance(title, str):
+        title = "Untitled"
+    if not period or not isinstance(period, str):
+        period = "Unknown Period"
+    
     if gemini_client is not None:
         try:
             prompt = f"""You are an enthusiastic and knowledgeable art museum tour guide. Generate a comprehensive, engaging description for this artwork.
@@ -191,13 +214,50 @@ def process_request(request_data):
                 'description': 'Please upload an image to recognize an artwork.'
             }
         
-        # Decode image
-        image_bytes = base64.b64decode(image_b64)
-        img = Image.open(io.BytesIO(image_bytes))
+        # Decode image with validation
+        try:
+            image_bytes = base64.b64decode(image_b64)
+            img = Image.open(io.BytesIO(image_bytes))
+        except Exception as e:
+            return {
+                'request_id': request_id,
+                'status': 'error',
+                'message': f'Failed to decode image: {str(e)}',
+                'artist': 'Unknown',
+                'title': 'Unknown',
+                'period': 'Unknown',
+                'confidence': 0.0,
+                'description': 'The uploaded image could not be processed. Please try a different image format.'
+            }
+        
+        # Validate image
+        if not isinstance(img, Image.Image):
+            return {
+                'request_id': request_id,
+                'status': 'error',
+                'message': 'Invalid image format',
+                'artist': 'Unknown',
+                'title': 'Unknown',
+                'period': 'Unknown',
+                'confidence': 0.0,
+                'description': 'Please provide a valid image file (JPEG or PNG).'
+            }
         
         # Convert to RGB if needed
-        if img.mode != 'RGB':
-            img = img.convert('RGB')
+        try:
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+        except Exception as e:
+            return {
+                'request_id': request_id,
+                'status': 'error',
+                'message': f'Image conversion failed: {str(e)}',
+                'artist': 'Unknown',
+                'title': 'Unknown',
+                'period': 'Unknown',
+                'confidence': 0.0,
+                'description': 'The image could not be converted to the required format.'
+            }
         
         # Search index
         results, emb = search_index(img, k=5)
