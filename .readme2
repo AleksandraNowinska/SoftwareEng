@@ -1,0 +1,6 @@
+to run the app:
+source .venv/bin/activate && python app.py
+ source .venv/bin/activate && python app.py
+
+to kill current process:
+lsof -ti:7860 | xargs kill -9 2>/dev/null && echo "Killed process on port 7860" || echo "No process found on port 7860"

@@ -1,12 +1,6 @@
-"""
-Orchestrator Setup and Management for Art Guide Distributed System
-Uses Redis as message queue for request/response handling.
-"""
-
 import redis
 import os
 
-# Configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 

@@ -1,23 +1,3 @@
-"""
-Orchestrator Service for Art Guide Distributed System
-
-This service acts as an intermediary between the Interface Server and AI Server.
-It manages the request queue, routes messages, and provides monitoring capabilities.
-
-While Redis provides the underlying queue infrastructure, this service adds:
-- Request validation and sanitization
-- Load balancing logic (when multiple AI servers exist)
-- Priority queue management
-- Health monitoring and metrics
-- Request/response logging
-
-Task 6 Compliance: "One or more servers to host the orchestrator. The orchestrator 
-can be implemented using queue services, such as RabbitMQ or using a database, or 
-other ways to provide an effective intermediator between the interface and the AI component."
-
-Authors: AlBeSa Team
-"""
-
 import os
 import json
 import time
@@ -27,14 +7,11 @@ from collections import defaultdict
 import signal
 import sys
 
-# Configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REQUEST_QUEUE = "artguide:requests"
 RESPONSE_PREFIX = "artguide:response:"
 METRICS_KEY = "artguide:metrics"
-
-# Monitoring port (optional Flask API for metrics)
 ORCHESTRATOR_PORT = int(os.getenv('ORCHESTRATOR_PORT', 6380))
 
 

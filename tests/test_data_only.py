@@ -1,5 +1,5 @@
 """
-Minimal test to verify FAISS index and metadata are correctly built.
+test to verify FAISS index and metadata are correctly built
 """
 
 import faiss

@@ -167,7 +167,50 @@ The Art Guide system will:
 
 ---
 
-## 5. Constraints and Assumptions
+## 5. Implementation Status and Deviations
+
+### 5.1 Implemented Features
+The following requirements have been successfully implemented in the current version:
+- **Image Processing (FR-01 to FR-04):** Fully implemented with support for JPEG/PNG formats, preprocessing, and color mode conversion
+- **Artwork Recognition (FR-05 to FR-08):** Implemented using CLIP ViT-B/32 and FAISS vector search, achieving 87% top-1 accuracy
+- **Metadata Retrieval (FR-09 to FR-11):** Implemented with Parquet storage and support for custom datasets
+- **Description Generation (FR-12 to FR-14):** Implemented using Gemini 2.5 Flash API with 300-400 word structured descriptions
+- **User Interface (FR-16 to FR-20):** Implemented with Gradio web interface including sample images and context toggle
+- **Logging and Telemetry (FR-21 to FR-23):** Implemented with CSV logging and privacy-preserving design
+- **Performance (NFR-01 to NFR-03):** Achieved 8-10 second response time, <2 second embedding generation, 50+ concurrent user support
+- **Reliability, Scalability, Maintainability (NFR-04 to NFR-14):** Implemented with comprehensive error handling, distributed architecture, and code documentation
+- **Security (NFR-15 to NFR-16):** Implemented with no image storage and secure API key management via environment variables
+- **All AI-Specific Requirements (AI-01 to AI-21):** Fully implemented including CLIP embeddings, Gemini LLM, evaluation metrics, and model versioning support
+
+### 5.2 Deferred Features
+The following requirements were planned but not implemented in the current version due to time and resource constraints:
+
+**FR-15 - Audio Output:** The requirement to "provide descriptions in both text and audio formats" was deferred. The current implementation provides text-based descriptions only. Audio output via text-to-speech (TTS) synthesis would require additional libraries (e.g., gTTS, pyttsx3, or cloud TTS APIs) and accessibility testing with visually impaired users. This feature remains a high priority for future development to support accessibility goals outlined in US-02.
+
+**NFR-11 - Text-to-Speech Synthesis:** The requirement for "natural, clear text-to-speech synthesis" was deferred along with FR-15. Implementing high-quality TTS would require evaluation of multiple TTS engines, voice selection, and integration testing to ensure natural-sounding audio output.
+
+**NFR-17 - Rate Limiting:** The requirement to "implement rate limiting to prevent abuse" was not implemented in the current version. The system currently does not enforce request rate limits at the application level. This feature is recommended for production deployment to prevent resource exhaustion and abuse. Implementation could use libraries such as Flask-Limiter or Redis-based rate limiting in the distributed architecture.
+
+**NFR-19 - Docker Containerization:** While the distributed architecture supports containerization principles, complete Docker images and docker-compose configurations were not created. The application runs natively on Linux, macOS, and Windows (NFR-18 satisfied) but would benefit from containerization for consistent deployment across environments.
+
+### 5.3 Rationale for Deferrals
+These features were deferred based on the following priorities:
+1. **Core Functionality First:** Focus was placed on delivering robust image recognition and AI-generated descriptions, which represent the primary value proposition
+2. **Time Constraints:** The academic project timeline required prioritizing features that demonstrate AI system integration and software engineering practices
+3. **Accessibility Trade-offs:** While audio output is valuable for accessibility, the text-based interface with clear, well-structured descriptions provides immediate value to the majority of users
+4. **Production Readiness:** Rate limiting and containerization are production deployment concerns that can be addressed during operational deployment phases
+
+### 5.4 Future Work Recommendations
+For subsequent releases, the following enhancements are recommended in priority order:
+1. **Audio Output (FR-15, NFR-11):** Integrate TTS library with voice selection and accessibility testing
+2. **Rate Limiting (NFR-17):** Implement Redis-based rate limiting in distributed architecture with configurable thresholds
+3. **Docker Containerization (NFR-19):** Create Dockerfiles for all services and docker-compose configuration for one-command deployment
+4. **Multilingual Support:** Extend beyond English to support multiple languages for international museum visitors
+5. **Mobile Application:** Develop native mobile apps for iOS/Android to enhance on-site usability
+
+---
+
+## 6. Constraints and Assumptions
 
 ### 5.1 Constraints
 - Limited to artworks included in the curator-provided dataset

@@ -1,6 +1,5 @@
 """
-Unit tests for the Art Guide application.
-Tests individual components in isolation.
+Unit tests for the Art Guide application. Tests individual components in isolation.
 """
 
 import unittest

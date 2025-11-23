@@ -1,9 +1,3 @@
-"""
-Interface Server for Art Guide Distributed System
-Handles user requests, UI, error checking, and telemetry logging.
-Does NOT call AI components directly - routes through orchestrator.
-"""
-
 import os
 import time
 import csv
@@ -17,7 +11,6 @@ import base64
 
 app = Flask(__name__)
 
-# Configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 LOG_PATH = "app/logs/telemetry.csv"
